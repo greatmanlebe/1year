@@ -174,13 +174,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     peer.on("error", (err) => {
       if (err.type === "unavailable-id") {
-        // Retry with a fresh random code if taken
         peer.destroy();
         initPeer();
       } else if (err.type === "peer-unavailable") {
         setStatus("Could not find that Room ID. Double-check the spelling.");
       } else {
         setStatus(`Connection notice: ${err.type}`);
+      }
+    });
+
+    // Auto-reconnect if the page comes out of the background / bfcache
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted && peer) {
+        if (peer.disconnected) {
+          setStatus("Reconnecting to room...");
+          peer.reconnect();
+        }
+      }
+    });
+
+    // Also handle regular offline/online network drops
+    window.addEventListener("offline", () => {
+      setStatus("Network offline. Waiting for connection...");
+    });
+
+    window.addEventListener("online", () => {
+      if (peer && peer.disconnected) {
+        setStatus("Back online. Reconnecting...");
+        peer.reconnect();
       }
     });
   }
