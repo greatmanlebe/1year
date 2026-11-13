@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy 1 Year Anniversary ❤️</title>
+  <!-- PeerJS for free real-time remote control between two browsers -->
+  <script src="https://unpkg.com"></script>
+  <style>
+    :root {
+      --primary: #ff4d6d;
+      --secondary: #ff8fa3;
+      --bg: #fff0f3;
+      --card: #ffffff;
+      --text: #590d22;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body { background: var(--bg); color: var(--text); text-align: center; padding-bottom: 60px; }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 40px 20px;
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3);
+    }
+
+    h1 { font-size: 2.2rem; margin-bottom: 10px; }
+    section {
+      max-width: 800px;
+      margin: 30px auto;
+      background: var(--card);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+    h2 { color: var(--primary); margin-bottom: 15px; }
+
+    /* 1. PHOTO GALLERY */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .gallery img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 12px;
+      transition: transform 0.3s;
+    }
+    .gallery img:hover { transform: scale(1.05); }
+
+    /* 2. JIGSAW PUZZLE (3x3 Swap) */
+    #puzzle-board {
+      width: 300px;
+      height: 300px;
+      margin: 15px auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      border: 4px solid var(--primary);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .tile {
+      width: 100px;
+      height: 100px;
+      background-size: 300px 300px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .tile.selected { outline: 3px solid #ffd166; z-index: 2; transform: scale(0.95); }
+
+    /* 3. INTERACTIVE 1-YEAR CAKE */
+    .cake-container { margin: 30px auto; position: relative; width: 220px; height: 200px; }
+    .cake-base {
+      position: absolute; bottom: 0; left: 10px; width: 200px; height: 80px;
+      background: #ffb3c1; border-radius: 15px 15px 5px 5px; border-bottom: 10px solid #ff758f;
+    }
+    .cake-top {
+      position: absolute; bottom: 80px; left: 35px; width: 150px; height: 60px;
+      background: #ffccd5; border-radius: 15px 15px 0 0;
+    }
+    .candle {
+      position: absolute; bottom: 140px; left: 102px; width: 16px; height: 45px;
+      background: repeating-linear-gradient(45deg, #fff, #fff 5px, var(--primary) 5px, var(--primary) 10px);
+      border-radius: 4px; cursor: pointer;
+    }
+    .flame {
+      position: absolute; top: -22px; left: 2px; width: 12px; height: 20px;
+      background: radial-gradient(circle, #fff 10%, #ffd166 50%, #f77f00 90%);
+      border-radius: 50% 50% 20% 20%;
+      animation: flicker 0.3s infinite alternate;
+    }
+    .flame.out { display: none; }
+    @keyframes flicker { from { transform: scale(1); } to { transform: scale(1.15) rotate(3deg); } }
+
+    /* 4. REMOTE-CONTROLLED MOVIE PLAYER */
+    video { width: 100%; border-radius: 12px; background: #000; margin-top: 15px; }
+    .sync-box {
+      background: #ffe5ec; padding: 15px; border-radius: 12px; margin-top: 15px;
+      display: flex; flex-direction: column; gap: 10px; align-items: center;
+    }
+    input, button {
+      padding: 10px 15px; border-radius: 8px; border: 1px solid var(--secondary); font-size: 1rem;
+    }
+    button {
+      background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold;
+    }
+    button:hover { background: #c9184a; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Happy 1 Year Together! ❤️</h1>
+    <p>365 days of loving you across the miles.</p>
+  </header>
+
+  <!-- SECTION 1: OUR MEMORIES -->
+  <section>
+    <h2>📸 Our Favorite Moments</h2>
+    <div class="gallery">
+      <!-- Replace these URLs with links to your actual photos -->
+      <img src="https://unsplash.com" alt="Memory 1">
+      <img src="https://unsplash.com" alt="Memory 2">
+      <img src="https://unsplash.com" alt="Memory 3">
+    </div>
+  </section>
+
+  <!-- SECTION 2: JIGSAW PUZZLE -->
+  <section>
+    <h2>🧩 Solve Our Memory Puzzle</h2>
+    <p>Click two tiles to swap them until the picture is complete!</p>
+    <div id="puzzle-board"></div>
+    <p id="puzzle-status" style="font-weight:bold; margin-top:10px;"></p>
+  </section>
+
+  <!-- SECTION 3: INTERACTIVE 1-YEAR CAKE -->
+  <section>
+    <h2>🎂 Make a Wish & Tap the Candle</h2>
+    <div class="cake-container" onclick="blowCandle()">
+      <div class="candle"><div class="flame" id="flame"></div></div>
+      <div class="cake-top"></div>
+      <div class="cake-base"></div>
+    </div>
+    <p id="wish-msg">Tap the candle to blow it out!</p>
+  </section>
+
+  <!-- SECTION 4: SYNCHRONIZED MOVIE NIGHT -->
+  <section>
+    <h2>🎬 Our Movie Theater</h2>
+    <p>One person hosts and controls Play, Pause, and Seek for both screens!</p>
+    
+    <!-- Replace src with a direct .mp4 link (e.g., hosted on Dropbox, Google Drive direct link, or local server) -->
+    <video id="shared-video" controls>
+      <source src="https://googleapis.com" type="video/mp4">
+      Your browser does not support HTML video.
+    </video>
+
+    <div class="sync-box">
+      <div><strong>Your Room ID:</strong> <span id="my-id">Generating...</span></div>
+      <div>
+        <input type="text" id="partner-id-input" placeholder="Enter Partner's Room ID">
+        <button onclick="connectToPartner()">Connect & Watch Together</button>
+      </div>
+      <p id="connection-status">Status: Waiting to connect...</p>
+    </div>
+  </section>
+
+  <script>
+    /* ================= 1. JIGSAW PUZZLE LOGIC ================= */
+    const puzzleImg = "https://unsplash.com"; // Replace with your photo
+    const board = document.getElementById("puzzle-board");
+    let order = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
+    let selectedIdx = null;
+
+    function renderPuzzle() {
+      board.innerHTML = "";
+      order.forEach((tilePos, index) => {
+        const tile = document.createElement("div");
+        tile.className = "tile" + (selectedIdx === index ? " selected" : "");
+        const row = Math.floor(tilePos / 3);
+        const col = tilePos % 3;
+        tile.style.backgroundImage = `url('${puzzleImg}')`;
+        tile.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+        tile.onclick = () => handleTileClick(index);
+        board.appendChild(tile);
+      });
+      if (order.every((val, i) => val === i)) {
+        document.getElementById("puzzle-status").textContent = "🎉 You solved it! Happy 1 Year, my love!";
+      }
+    }
+
+    function handleTileClick(index) {
+      if (selectedIdx === null) {
+        selectedIdx = index;
+      } else {
+        [order[selectedIdx], order[index]] = [order[index], order[selectedIdx]];
+        selectedIdx = null;
+      }
+      renderPuzzle();
+    }
+    renderPuzzle();
+
+    /* ================= 2. INTERACTIVE CAKE LOGIC ================= */
+    function blowCandle() {
+      const flame = document.getElementById("flame");
+      flame.classList.toggle("out");
+      const msg = document.getElementById("wish-msg");
+      msg.textContent = flame.classList.contains("out")
+        ? "✨ Wish made! Here is to many more years together! ❤️"
+        : "Tap the candle to blow it out!";
+    }
+
+    /* ================= 3. REMOTE VIDEO CONTROL (PEERJS) ================= */
+    const video = document.getElementById("shared-video");
+    const peer = new Peer();
+    let conn = null;
+    let isRemoteAction = false;
+
+    peer.on("open", (id) => {
+      document.getElementById("my-id").textContent = id;
+    });
+
+    // When your girlfriend connects to your ID
+    peer.on("connection", (connection) => {
+      conn = connection;
+      setupConnection();
+    });
+
+    // When you connect to her ID
+    function connectToPartner() {
+      const partnerId = document.getElementById("partner-id-input").value.trim();
+      if (!partnerId) return;
+      conn = peer.connect(partnerId);
+      setupConnection();
+    }
+
+    function setupConnection() {
+      document.getElementById("connection-status").textContent = "✅ Connected! Controls are now synced.";
+      conn.on("data", (data) => {
+        isRemoteAction = true;
+        if (data.type === "play") {
+          video.currentTime = data.time;
+          video.play();
+        } else if (data.type === "pause") {
+          video.currentTime = data.time;
+          video.pause();
+        } else if (data.type === "seek") {
+          video.currentTime = data.time;
+        }
+        setTimeout(() => { isRemoteAction = false; }, 300);
+      });
+    }
+
+    // Broadcast Play, Pause, and Seek events to the other person
+    video.onplay = () => {
+      if (!isRemoteAction && conn) conn.send({ type: "play", time: video.currentTime });
+    };
+    video.onpause = () => {
+      if (!isRemoteAction && conn) conn.send({ type: "pause", time: video.currentTime });
+    };
+    video.onseeked = () => {
+      if (!isRemoteAction && conn) conn.send({ type: "seek", time: video.currentTime });
+    };
+  </script>
+</body>
+</html>

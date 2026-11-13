@@ -1,0 +1,213 @@
+:root {
+  --primary: #ff4d6d;
+  --secondary: #ff8fa3;
+  --bg: #fff0f3;
+  --card: #ffffff;
+  --text: #590d22;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  text-align: center;
+  padding-bottom: 60px;
+}
+
+header {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  padding: 40px 20px;
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 30px;
+  box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3);
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+
+section {
+  max-width: 800px;
+  margin: 30px auto;
+  background: var(--card);
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+h2 {
+  color: var(--primary);
+  margin-bottom: 15px;
+}
+
+/* 1. PHOTO GALLERY */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.gallery img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.gallery img:hover {
+  transform: scale(1.05);
+}
+
+/* 2. JIGSAW PUZZLE (3x3 Swap) */
+#puzzle-board {
+  width: 300px;
+  height: 300px;
+  margin: 15px auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  border: 4px solid var(--primary);
+  border-radius: 10px;
+  overflow: hidden;
+  box-sizing: content-box;
+}
+
+.tile {
+  width: 100px;
+  height: 100px;
+  background-size: 300px 300px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.tile.selected {
+  outline: 3px solid #ffd166;
+  z-index: 2;
+  transform: scale(0.95);
+}
+
+#puzzle-status {
+  font-weight: bold;
+  margin-top: 10px;
+  color: var(--primary);
+}
+
+/* 3. INTERACTIVE 1-YEAR CAKE */
+.cake-container {
+  margin: 30px auto;
+  position: relative;
+  width: 220px;
+  height: 200px;
+  cursor: pointer;
+}
+
+.cake-base {
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  width: 200px;
+  height: 80px;
+  background: #ffb3c1;
+  border-radius: 15px 15px 5px 5px;
+  border-bottom: 10px solid #ff758f;
+}
+
+.cake-top {
+  position: absolute;
+  bottom: 80px;
+  left: 35px;
+  width: 150px;
+  height: 60px;
+  background: #ffccd5;
+  border-radius: 15px 15px 0 0;
+}
+
+.candle {
+  position: absolute;
+  bottom: 140px;
+  left: 102px;
+  width: 16px;
+  height: 45px;
+  background: repeating-linear-gradient(
+    45deg,
+    #fff,
+    #fff 5px,
+    var(--primary) 5px,
+    var(--primary) 10px
+  );
+  border-radius: 4px;
+}
+
+.flame {
+  position: absolute;
+  top: -22px;
+  left: 2px;
+  width: 12px;
+  height: 20px;
+  background: radial-gradient(circle, #fff 10%, #ffd166 50%, #f77f00 90%);
+  border-radius: 50% 50% 20% 20%;
+  animation: flicker 0.3s infinite alternate;
+}
+
+.flame.out {
+  display: none;
+}
+
+@keyframes flicker {
+  from { transform: scale(1); }
+  to { transform: scale(1.15) rotate(3deg); }
+}
+
+/* 4. REMOTE-CONTROLLED MOVIE PLAYER */
+video {
+  width: 100%;
+  border-radius: 12px;
+  background: #000;
+  margin-top: 15px;
+}
+
+.sync-box {
+  background: #ffe5ec;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.sync-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+input, button {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--secondary);
+  font-size: 1rem;
+}
+
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #c9184a;
+}
