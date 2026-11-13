@@ -1,79 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Happy 1 Year Anniversary, Vanelle ❤️</title>
+  <title>365 Days of Us — Vanelle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-      <link rel="stylesheet" href="style.css" /><script src="peerjs.min.js" defer></script>
+  
+  <!-- Switched to Cloudflare cdnjs to bypass tracking prevention blocks -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js" defer></script>
   <script src="script.js" defer></script>
-
-
 </head>
 <body>
 
-  <header>
-    <h1>Happy 1 Year Together, Vanelle! ❤️</h1>
-    <p>365 days of loving you across the miles.</p>
+  <header class="hero">
+    <span class="eyebrow">Chapter One • 365 Days</span>
+    <h1>Happy Anniversary, <em>Vanelle</em></h1>
+    <p class="subtitle">Distance hasn’t dimmed a single day of loving you.</p>
+    <div class="divider">✦</div>
   </header>
 
-  <!-- SECTION 1: OUR MEMORIES -->
-  <section>
-    <h2>📸 Our Favorite Moments</h2>
-    <div class="gallery">
-      <!-- Replace these URLs with your actual photo paths (e.g., "images/pic1.jpg") -->
-      <img src="v2.jpg" alt="Memory 1" />
-      <img src="v4.jpg" alt="Memory 2" />
-      <img src="v6.jpg" alt="Memory 3" />
-    </div>
-  </section>
-
-  <!-- SECTION 2: JIGSAW PUZZLE -->
-  <section>
-    <h2>🧩 Solve Our Memory Puzzle</h2>
-    <p>Click two tiles to swap them until the picture is complete!</p>
-    <div id="puzzle-board"></div>
-    <p id="puzzle-status"></p>
-  </section>
-
-  <!-- SECTION 3: INTERACTIVE 1-YEAR CAKE -->
-  <section>
-    <h2>🎂 Make a Wish &amp; Blow Out the Candle</h2>
-    <div class="cake-container" id="cake-btn">
-      <div class="candle">
-        <div class="flame" id="flame"></div>
+  <main class="container">
+    <!-- SECTION 1: POLAROID GALLERY -->
+    <section class="editorial-section">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2>Moments I Keep Close</h2>
       </div>
-      <div class="cake-top"></div>
-      <div class="cake-base"></div>
-    </div>
-    <p id="wish-msg">Tap the candle or enable your mic to blow it out!</p>
-    <button id="mic-btn" type="button" style="margin-top: 12px;">
-      🎤 Enable Mic to Blow Candle
-    </button>
-  </section>
-
-
-  <!-- SECTION 4: SYNCHRONIZED MOVIE NIGHT -->
-  <section>
-    <h2>🎬 Our Movie Theater</h2>
-    <p>One person hosts and controls Play, Pause, and Seek for both screens!</p>
-
-    <!-- Replace src with your video file path or direct .mp4 URL -->
-    <video id="shared-video" controls>
-      <source src="vi1.mp4" type="video/mp4" />
-      Your browser does not support HTML video.
-    </video>
-
-    <div class="sync-box">
-      <div><strong>Your Room ID:</strong> <span id="my-id">Connecting...</span></div>
-      <div class="sync-controls">
-        <input type="text" id="partner-id-input" placeholder="Enter Partner's Room ID" />
-        <button id="connect-btn" type="button">Connect &amp; Watch Together</button>
+      <div class="polaroid-grid">
+        <figure class="polaroid" style="--rot: -2deg;">
+          <img src="v2.jpg" alt="Memory 1" />
+          <figcaption>My favorite smile</figcaption>
+        </figure>
+        <figure class="polaroid" style="--rot: 1.5deg;">
+          <img src="v4.jpg" alt="Memory 2" />
+          <figcaption>Worth every mile</figcaption>
+        </figure>
+        <figure class="polaroid" style="--rot: -1deg;">
+          <img src="v6.jpg" alt="Memory 3" />
+          <figcaption>Here’s to many more</figcaption>
+        </figure>
       </div>
-      <p id="connection-status">Status: Waiting to connect...</p>
-    </div>
-  </section>
+    </section>
+
+    <!-- SECTION 2: MEMORY PUZZLE -->
+    <section class="editorial-section">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2>Put Us Back Together</h2>
+        <p class="section-desc">Tap any two tiles to swap them until our picture is whole.</p>
+      </div>
+      <div class="puzzle-wrapper">
+        <div id="puzzle-board"></div>
+        <p id="puzzle-status" class="status-note"></p>
+      </div>
+    </section>
+
+    <!-- SECTION 3: INTERACTIVE CANDLE -->
+    <section class="editorial-section">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2>Make a Wish for Year Two</h2>
+        <p class="section-desc">Close your eyes, make a wish, and blow into your mic (or tap the flame).</p>
+      </div>
+
+      <div class="cake-stage">
+        <div class="cake-container" id="cake-btn" role="button" tabindex="0" aria-label="Birthday cake candle">
+          <div class="candle">
+            <div class="flame" id="flame"></div>
+            <div class="smoke" id="smoke"></div>
+          </div>
+          <div class="cake-top"></div>
+          <div class="cake-base"></div>
+          <div class="cake-plate"></div>
+        </div>
+        <p id="wish-msg" class="status-note">The candle is lit and waiting for your wish.</p>
+        <button id="mic-btn" class="btn-outline" type="button">
+          Enable Microphone to Blow
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 4: SYNCHRONIZED MOVIE THEATER -->
+    <section class="editorial-section theater-section">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Our Private Screening</h2>
+        <p class="section-desc">Share your Room ID or paste hers below so Play, Pause, and Scrubbing stay in sync.</p>
+      </div>
+
+      <div class="video-frame">
+        <video id="shared-video" controls playsinline preload="metadata">
+          <source src="vi1.mp4" type="video/mp4" />
+          Your browser does not support HTML video.
+        </video>
+      </div>
+
+      <div class="sync-panel">
+        <div class="room-id-row">
+          <span class="label">Your Room ID</span>
+          <div class="id-pill">
+            <code id="my-id">Generating ID...</code>
+            <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
+          </div>
+        </div>
+
+        <div class="sync-controls">
+          <input type="text" id="partner-id-input" placeholder="Paste Vanelle's Room ID here..." />
+          <button id="connect-btn" class="btn-primary" type="button">Sync Screens</button>
+        </div>
+
+        <div class="status-bar">
+          <span class="status-dot" id="status-dot"></span>
+          <p id="connection-status">Waiting for partner connection...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Made with love for Vanelle • Year One</p>
+  </footer>
 
 </body>
 </html>
