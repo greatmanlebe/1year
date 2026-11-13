@@ -159,7 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    peer = new Peer(generateShortId());
+    // FIX: Pass public STUN servers so mobile networks & CGNAT can punch through
+    peer = new Peer(generateShortId(), {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun1.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' }
+        ]
+      }
+    });
 
     peer.on("open", (id) => {
       myIdEl.textContent = id;
@@ -183,24 +192,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Auto-reconnect if the page comes out of the background / bfcache
+    // Auto-reconnect if the page goes to background / mobile tab sleep
     window.addEventListener("pageshow", (event) => {
-      if (event.persisted && peer) {
-        if (peer.disconnected) {
-          setStatus("Reconnecting to room...");
-          peer.reconnect();
-        }
-      }
-    });
-
-    // Also handle regular offline/online network drops
-    window.addEventListener("offline", () => {
-      setStatus("Network offline. Waiting for connection...");
-    });
-
-    window.addEventListener("online", () => {
-      if (peer && peer.disconnected) {
-        setStatus("Back online. Reconnecting...");
+      if (event.persisted && peer && peer.disconnected) {
+        setStatus("Reconnecting to room...");
         peer.reconnect();
       }
     });
