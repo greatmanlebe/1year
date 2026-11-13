@@ -121,12 +121,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         detectBlow();
       } catch (err) {
-        wishMsg.textContent = "Microphone unavailable (requires HTTPS). Tap the flame to blow it out.";
+        wishMsg.textContent = "Microphone unavailable. Tap the flame to blow it out.";
       }
     });
   }
 
-  /* ================= 3. SIMULTANEOUS MOVIE SYNC (PEERJS) ================= */
+  /* ================= 3. INSTANT SYNCHRONIZED MOVIE THEATER ================= */
   const video = document.getElementById("shared-video");
   const myIdEl = document.getElementById("my-id");
   const copyIdBtn = document.getElementById("copy-id-btn");
@@ -137,9 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let peer = null;
   let conn = null;
-  let ignoreLocalEvents = false;
+  let isReceivingUpdate = false; // Prevents feedback loops
 
-  // Generate a short, clean room code instead of a massive UUID
   function generateShortId() {
     return "vanelle-" + Math.random().toString(36).substring(2, 6);
   }
@@ -155,11 +154,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function initPeer() {
     if (typeof Peer === "undefined") {
-      setStatus("PeerJS failed to load. Check your internet connection.");
+      setStatus("PeerJS failed to load.");
       return;
     }
 
-    // FIX: Pass public STUN servers so mobile networks & CGNAT can punch through
     peer = new Peer(generateShortId(), {
       config: {
         iceServers: [
@@ -185,42 +183,34 @@ document.addEventListener("DOMContentLoaded", () => {
       if (err.type === "unavailable-id") {
         peer.destroy();
         initPeer();
-      } else if (err.type === "peer-unavailable") {
-        setStatus("Could not find that Room ID. Double-check the spelling.");
       } else {
         setStatus(`Connection notice: ${err.type}`);
-      }
-    });
-
-    // Auto-reconnect if the page goes to background / mobile tab sleep
-    window.addEventListener("pageshow", (event) => {
-      if (event.persisted && peer && peer.disconnected) {
-        setStatus("Reconnecting to room...");
-        peer.reconnect();
       }
     });
   }
 
   function bindConnectionEvents() {
     conn.on("open", () => {
-      setStatus("Connected! Both screens are now synced.", true);
-      // Sync current state immediately upon joining
-      sendSyncEvent(video.paused ? "pause" : "play", video.currentTime);
+      setStatus("Connected! Screens are linked.", true);
+      
+      // Instantly push host's current video time/state to partner upon connecting
+      sendSyncCommand(video.paused ? "pause" : "play", video.currentTime);
     });
 
     conn.on("data", (data) => {
       if (!data || !data.type) return;
 
-      ignoreLocalEvents = true;
+      // Lock local event listeners so they don't echo back
+      isReceivingUpdate = true;
 
-      // Only adjust timestamp if drift is > 0.5s to prevent stutter
-      if (Math.abs(video.currentTime - data.time) > 0.5) {
+      // Force timeline alignment if drifted by more than 0.3 seconds
+      if (Math.abs(video.currentTime - data.time) > 0.3) {
         video.currentTime = data.time;
       }
 
       if (data.type === "play") {
         video.play().catch(() => {
-          setStatus("Connected — tap Play on your video once to allow synced playback.", true);
+          setStatus("Connected — tap the video once to enable instant autoplay.", true);
         });
       } else if (data.type === "pause") {
         video.pause();
@@ -228,9 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
         video.currentTime = data.time;
       }
 
+      // Release lock shortly after state applies
       setTimeout(() => {
-        ignoreLocalEvents = false;
-      }, 350);
+        isReceivingUpdate = false;
+      }, 300);
     });
 
     conn.on("close", () => {
@@ -238,23 +229,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function sendSyncEvent(type, time) {
-    if (!ignoreLocalEvents && conn && conn.open) {
+  function sendSyncCommand(type, time) {
+    if (!isReceivingUpdate && conn && conn.open) {
       conn.send({ type, time });
     }
   }
 
-  // Outgoing video events
-  video.addEventListener("play", () => sendSyncEvent("play", video.currentTime));
-  video.addEventListener("pause", () => sendSyncEvent("pause", video.currentTime));
-  video.addEventListener("seeked", () => sendSyncEvent("seek", video.currentTime));
+  // Monitor local video actions and broadcast instantly
+  video.addEventListener("play", () => {
+    sendSyncCommand("play", video.currentTime);
+  });
 
-  // Connect button
+  video.addEventListener("pause", () => {
+    sendSyncCommand("pause", video.currentTime);
+  });
+
+  video.addEventListener("seeking", () => {
+    sendSyncCommand("seek", video.currentTime);
+  });
+
+  // Connect Button Trigger
   connectBtn.addEventListener("click", () => {
     const targetId = partnerInput.value.trim();
     if (!targetId || !peer) return;
     if (targetId === peer.id) {
-      setStatus("That’s your own Room ID—paste Vanelle’s ID instead.");
+      setStatus("That’s your own ID—enter Vanelle’s ID instead.");
       return;
     }
 
@@ -264,16 +263,16 @@ document.addEventListener("DOMContentLoaded", () => {
     bindConnectionEvents();
   });
 
-  // Copy ID button
+  // Copy ID Button
   copyIdBtn.addEventListener("click", async () => {
     const idText = myIdEl.textContent;
-    if (!idText || idText.includes("Generating")) return;
+    if (!idText || idText.includes("Ready")) return;
     try {
       await navigator.clipboard.writeText(idText);
       copyIdBtn.textContent = "Copied!";
       setTimeout(() => (copyIdBtn.textContent = "Copy"), 2000);
     } catch {
-      copyIdBtn.textContent = "Select & Copy";
+      copyIdBtn.textContent = "Copy";
     }
   });
 
