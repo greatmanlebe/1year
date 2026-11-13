@@ -158,11 +158,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // FIX: Added the missing "stun:" prefix to every URL
     peer = new Peer(generateShortId(), {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun1.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
           { urls: 'stun:global.stun.twilio.com:3478' }
         ]
       }
@@ -188,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
   function bindConnectionEvents() {
     conn.on("open", () => {
       setStatus("Connected! Screens are linked.", true);
