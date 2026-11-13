@@ -1,11 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
   /* ================= 1. JIGSAW PUZZLE LOGIC ================= */
-  const puzzleImg = "v1.jpg";
+  const puzzleImg = "v1.jpg"; // Replace with your photo path
   const board = document.getElementById("puzzle-board");
   const statusEl = document.getElementById("puzzle-status");
 
-  // Properly initialize tiles 0..8 and shuffle
-  let order = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
+  // Initialize tiles 0..8 and shuffle until not already solved
+  // Create [0, 1, 2, 3, 4, 5, 6, 7, 8] safely and shuffle
+  let order = Array.from({ length: 9 }, (_, i) => i);
+  do {
+    order.sort(() => Math.random() - 0.5);
+  } while (order.every((val, i) => val === i));
   let selectedIdx = null;
 
   function renderPuzzle() {
@@ -38,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderPuzzle();
 
-  /* ================= 2. INTERACTIVE CAKE LOGIC ================= */
   /* ================= 2. INTERACTIVE CAKE & MIC BLOW LOGIC ================= */
   const cakeBtn = document.getElementById("cake-btn");
   const flame = document.getElementById("flame");
@@ -81,58 +84,60 @@ document.addEventListener("DOMContentLoaded", () => {
       audioContext.close();
       audioContext = null;
     }
-    micBtn.textContent = "🎤 Enable Mic to Blow Candle";
+    if (micBtn) {
+      micBtn.textContent = "🎤 Enable Mic to Blow Candle";
+    }
   }
 
-  micBtn.addEventListener("click", async () => {
-    if (isListening) {
-      stopMic();
-      return;
-    }
-
-    try {
-      // Request microphone access
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContext.createMediaStreamSource(micStream);
-      const analyser = audioContext.createAnalyser();
-
-      analyser.fftSize = 256;
-      source.connect(analyser);
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      isListening = true;
-      micBtn.textContent = "🌬️ Listening... Blow on the candle!";
-      relightCandle();
-
-      function detectBlow() {
-        if (!isListening) return;
-
-        analyser.getByteFrequencyData(dataArray);
-
-        // Calculate average volume across low-to-mid frequencies (wind/blow noise)
-        let sum = 0;
-        const lowFreqBins = 32;
-        for (let i = 0; i < lowFreqBins; i++) {
-          sum += dataArray[i];
-        }
-        const averageVolume = sum / lowFreqBins;
-
-        // Threshold (adjust between 80 and 130 if too sensitive or not sensitive enough)
-        if (averageVolume > 105) {
-          extinguishCandle();
-          return;
-        }
-
-        requestAnimationFrame(detectBlow);
+  if (micBtn) {
+    micBtn.addEventListener("click", async () => {
+      if (isListening) {
+        stopMic();
+        return;
       }
 
-      detectBlow();
-    } catch (err) {
-      wishMsg.textContent = "⚠️ Mic blocked or requires HTTPS. Just tap the candle to blow it out!";
-    }
-  });
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(micStream);
+        const analyser = audioContext.createAnalyser();
 
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        isListening = true;
+        micBtn.textContent = "🌬️ Listening... Blow on the candle!";
+        relightCandle();
+
+        function detectBlow() {
+          if (!isListening) return;
+
+          analyser.getByteFrequencyData(dataArray);
+
+          // Measure low-frequency wind noise from blowing into the mic
+          let sum = 0;
+          const lowFreqBins = 32;
+          for (let i = 0; i < lowFreqBins; i++) {
+            sum += dataArray[i];
+          }
+          const averageVolume = sum / lowFreqBins;
+
+          // Adjust threshold (80-130) to tune sensitivity
+          if (averageVolume > 105) {
+            extinguishCandle();
+            return;
+          }
+
+          requestAnimationFrame(detectBlow);
+        }
+
+        detectBlow();
+      } catch (err) {
+        wishMsg.textContent = "⚠️ Mic blocked or requires HTTPS. Tap the candle to blow it out!";
+      }
+    });
+  }
 
   /* ================= 3. REMOTE VIDEO CONTROL (PEERJS) ================= */
   const video = document.getElementById("shared-video");
@@ -145,35 +150,54 @@ document.addEventListener("DOMContentLoaded", () => {
   let isRemoteAction = false;
 
   function initPeer() {
+     const createRoomBtn = document.getElementById("create-room-btn");
+  const customRoomInput = document.getElementById("custom-room-input");
+
+  function startPeer(customId = null) {
     if (typeof Peer === "undefined") {
-      myIdEl.textContent = "Library blocked/offline";
-      connStatusEl.textContent = "⚠️ Could not load PeerJS. Check your internet or disable ad-blockers.";
+      connStatusEl.textContent = "⚠️ PeerJS library not loaded.";
       return;
     }
 
-    const peer = new Peer();
+    // Pass customId if provided, otherwise PeerJS generates one automatically
+    const peer = customId ? new Peer(customId) : new Peer();
 
     peer.on("open", (id) => {
       myIdEl.textContent = id;
+      connStatusEl.textContent = "✅ Room ready! Share this ID with your partner.";
     });
 
     peer.on("error", (err) => {
-      connStatusEl.textContent = `⚠️ Connection error: ${err.type}`;
+      if (err.type === "unavailable-id") {
+        connStatusEl.textContent = "⚠️ That room name is already taken. Try another!";
+      } else {
+        connStatusEl.textContent = `⚠️ Error: ${err.type}`;
+      }
     });
 
-    // When your partner connects to your ID
     peer.on("connection", (connection) => {
       conn = connection;
       setupConnection();
     });
 
-    // When you connect to your partner's ID
-    connectBtn.addEventListener("click", () => {
+    connectBtn.onclick = () => {
       const partnerId = partnerInput.value.trim();
       if (!partnerId) return;
       conn = peer.connect(partnerId);
       setupConnection();
-    });
+    };
+  }
+
+  // Host clicks "Create Host Room" with a custom name
+  createRoomBtn.addEventListener("click", () => {
+    const chosenName = customRoomInput.value.trim();
+    if (!chosenName) return;
+    startPeer(chosenName);
+  });
+
+  // Guest can start with an automatic ID right away
+  startPeer();
+
   }
 
   function setupConnection() {
@@ -196,9 +220,13 @@ document.addEventListener("DOMContentLoaded", () => {
         isRemoteAction = false;
       }, 300);
     });
+
+    conn.on("close", () => {
+      connStatusEl.textContent = "⚠️ Partner disconnected.";
+    });
   }
 
-  // Broadcast Play, Pause, and Seek events to the other person
+  // Broadcast Play, Pause, and Seek events to the other screen
   video.addEventListener("play", () => {
     if (!isRemoteAction && conn && conn.open) {
       conn.send({ type: "play", time: video.currentTime });
@@ -217,14 +245,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Fallback loader if unpkg CDN fails to load
-  if (typeof Peer === "undefined") {
-    const fallbackScript = document.createElement("script");
-    fallbackScript.src = "https://cloudflare.com";
-    fallbackScript.onload = initPeer;
-    fallbackScript.onerror = initPeer;
-    document.head.appendChild(fallbackScript);
-  } else {
-    initPeer();
-  }
+  initPeer();
 });
