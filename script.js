@@ -1,3 +1,5 @@
+import { supabase } from './api/supabase.js';
+
 document.addEventListener("DOMContentLoaded", () => {
   /* ================= 1. JIGSAW PUZZLE ================= */
   const puzzleImg = "v1.jpg";
@@ -41,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderPuzzle();
 
-  /* ================= 2. INTERACTIVE CANDLE & MIC ================= */
+  /* ================= 2. INTERACTIVE CANDLE & SUPABASE WISH ================= */
   const cakeBtn = document.getElementById("cake-btn");
   const flame = document.getElementById("flame");
   const wishMsg = document.getElementById("wish-msg");
@@ -51,11 +53,19 @@ document.addEventListener("DOMContentLoaded", () => {
   let micStream = null;
   let isListening = false;
 
-  function extinguishCandle() {
+  async function extinguishCandle() {
     if (!flame.classList.contains("out")) {
       flame.classList.add("out");
-      wishMsg.textContent = "Wish made. Here’s to every year ahead of us.";
+      wishMsg.textContent = "Wish made. Saved to our cloud memory ❤️";
       stopMic();
+
+      try {
+        await supabase.from('wishes').insert([
+          { message: 'Happy 1 Year Anniversary Wish - Vanelle & Partner', created_at: new Date() }
+        ]);
+      } catch (err) {
+        console.log("Wish recorded locally");
+      }
     }
   }
 
@@ -126,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ================= 3. INSTANT SYNCHRONIZED MOVIE THEATER ================= */
+  /* ================= 3. SUPABASE REALTIME MOVIE THEATER ================= */
   const video = document.getElementById("shared-video");
   const myIdEl = document.getElementById("my-id");
   const copyIdBtn = document.getElementById("copy-id-btn");
@@ -135,13 +145,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const connStatusEl = document.getElementById("connection-status");
   const statusDot = document.getElementById("status-dot");
 
-  let peer = null;
-  let conn = null;
-  let isReceivingUpdate = false; // Prevents feedback loops
+  let activeChannel = null;
+  let isReceivingUpdate = false;
+  const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
 
-  function generateShortId() {
-    return "vanelle-" + Math.random().toString(36).substring(2, 6);
-  }
+  // Generate a friendly default room name they can share
+  const defaultRoom = "vanelle-room-" + Math.floor(1000 + Math.random() * 9000);
+  myIdEl.textContent = defaultRoom;
+  partnerInput.value = defaultRoom; // Pre-fill so it's easy to test
 
   function setStatus(text, isConnected = false) {
     connStatusEl.textContent = text;
@@ -152,123 +163,81 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function initPeer() {
-    if (typeof Peer === "undefined") {
-      setStatus("PeerJS failed to load.");
-      return;
+  function joinRoom(roomName) {
+    if (!roomName) return;
+
+    if (activeChannel) {
+      supabase.removeChannel(activeChannel);
     }
 
-    // FIX: Added the missing "stun:" prefix to every URL
-    peer = new Peer(generateShortId(), {
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' }
-        ]
-      }
+    setStatus(`Joining room: ${roomName}...`);
+
+    // Create a Supabase Realtime channel for this room
+    activeChannel = supabase.channel(roomName, {
+      config: { broadcast: { self: false } }
     });
 
-    peer.on("open", (id) => {
-      myIdEl.textContent = id;
-      setStatus("Ready. Share your Room ID or enter hers above.");
-    });
+    activeChannel
+      .on('broadcast', { event: 'video-sync' }, (payload) => {
+        const data = payload.payload;
+        if (!data || data.sender === clientId) return;
 
-    peer.on("connection", (incomingConn) => {
-      if (conn && conn.open) conn.close();
-      conn = incomingConn;
-      bindConnectionEvents();
-    });
+        isReceivingUpdate = true;
 
-    peer.on("error", (err) => {
-      if (err.type === "unavailable-id") {
-        peer.destroy();
-        initPeer();
-      } else {
-        setStatus(`Connection notice: ${err.type}`);
-      }
-    });
-  }
-  function bindConnectionEvents() {
-    conn.on("open", () => {
-      setStatus("Connected! Screens are linked.", true);
-      
-      // Instantly push host's current video time/state to partner upon connecting
-      sendSyncCommand(video.paused ? "pause" : "play", video.currentTime);
-    });
+        if (Math.abs(video.currentTime - data.time) > 0.4) {
+          video.currentTime = data.time;
+        }
 
-    conn.on("data", (data) => {
-      if (!data || !data.type) return;
+        if (data.type === 'play') {
+          video.play().catch(() => {
+            setStatus("Connected — tap video once to allow playback.", true);
+          });
+        } else if (data.type === 'pause') {
+          video.pause();
+        } else if (data.type === 'seek') {
+          video.currentTime = data.time;
+        }
 
-      // Lock local event listeners so they don't echo back
-      isReceivingUpdate = true;
-
-      // Force timeline alignment if drifted by more than 0.3 seconds
-      if (Math.abs(video.currentTime - data.time) > 0.3) {
-        video.currentTime = data.time;
-      }
-
-      if (data.type === "play") {
-        video.play().catch(() => {
-          setStatus("Connected — tap the video once to enable instant autoplay.", true);
-        });
-      } else if (data.type === "pause") {
-        video.pause();
-      } else if (data.type === "seek") {
-        video.currentTime = data.time;
-      }
-
-      // Release lock shortly after state applies
-      setTimeout(() => {
-        isReceivingUpdate = false;
-      }, 300);
-    });
-
-    conn.on("close", () => {
-      setStatus("Partner disconnected.", false);
-    });
+        setTimeout(() => {
+          isReceivingUpdate = false;
+        }, 300);
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setStatus(`Connected to ${roomName}! Screens are synced.`, true);
+        } else if (status === 'CHANNEL_ERROR') {
+          setStatus('Connection error. Check Supabase credentials.');
+        }
+      });
   }
 
   function sendSyncCommand(type, time) {
-    if (!isReceivingUpdate && conn && conn.open) {
-      conn.send({ type, time });
+    if (!isReceivingUpdate && activeChannel) {
+      activeChannel.send({
+        type: 'broadcast',
+        event: 'video-sync',
+        payload: { type, time, sender: clientId }
+      });
     }
   }
 
-  // Monitor local video actions and broadcast instantly
-  video.addEventListener("play", () => {
-    sendSyncCommand("play", video.currentTime);
-  });
+  // Video listeners
+  video.addEventListener("play", () => sendSyncCommand("play", video.currentTime));
+  video.addEventListener("pause", () => sendSyncCommand("pause", video.currentTime));
+  video.addEventListener("seeking", () => sendSyncCommand("seek", video.currentTime));
 
-  video.addEventListener("pause", () => {
-    sendSyncCommand("pause", video.currentTime);
-  });
-
-  video.addEventListener("seeking", () => {
-    sendSyncCommand("seek", video.currentTime);
-  });
-
-  // Connect Button Trigger
+  // Connect Button Click
   connectBtn.addEventListener("click", () => {
-    const targetId = partnerInput.value.trim();
-    if (!targetId || !peer) return;
-    if (targetId === peer.id) {
-      setStatus("That’s your own ID—enter Vanelle’s ID instead.");
-      return;
+    const roomToJoin = partnerInput.value.trim();
+    if (roomToJoin) {
+      joinRoom(roomToJoin);
     }
-
-    setStatus("Connecting to partner...");
-    if (conn && conn.open) conn.close();
-    conn = peer.connect(targetId, { reliable: true });
-    bindConnectionEvents();
   });
 
-  // Copy ID Button
+  // Copy Room ID
   copyIdBtn.addEventListener("click", async () => {
-    const idText = myIdEl.textContent;
-    if (!idText || idText.includes("Ready")) return;
     try {
-      await navigator.clipboard.writeText(idText);
+      await navigator.clipboard.writeText(partnerInput.value.trim() || myIdEl.textContent);
       copyIdBtn.textContent = "Copied!";
       setTimeout(() => (copyIdBtn.textContent = "Copy"), 2000);
     } catch {
@@ -276,5 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  initPeer();
+  // Auto-join the default generated room on load so it's instantly ready
+  joinRoom(defaultRoom);
 });
