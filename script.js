@@ -1,4 +1,4 @@
-import { supabase } from './src/api/supabase';
+import { supabase } from './src/api/supabase.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   /* ================= 1. JIGSAW PUZZLE ================= */
