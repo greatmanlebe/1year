@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+
 
 // Import directly via a browser-native ESM CDN URL
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
