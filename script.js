@@ -1,4 +1,4 @@
-import { supabase } from './src/api/supabase.js';
+import { supabase } from './src/apr/supabase.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   /* ================= 1. JIGSAW PUZZLE ================= */
@@ -141,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const copyIdBtn = document.getElementById("copy-id-btn");
   const partnerInput = document.getElementById("partner-id-input");
   const connectBtn = document.getElementById("connect-btn");
-  const disconnectBtn = document.getElementById("disconnect-btn");
   const connStatusEl = document.getElementById("connection-status");
   const statusDot = document.getElementById("status-dot");
 
@@ -151,9 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastKnownTime = 0;
   const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
 
-// Read the instantly generated Room ID from the HTML element
-  const defaultRoom = myIdEl.textContent.trim();
-  partnerInput.value = ""; // Keeps form empty on load
+  // Generate instant room ID
+  const defaultRoom = "vanelle-room-" + Math.floor(1000 + Math.random() * 9000);
+  myIdEl.textContent = defaultRoom;
+  partnerInput.value = "vanelle-room-";
 
   function setStatus(text, isConnected = false) {
     connStatusEl.textContent = text;
@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Detect manual timeline scrubbing
+    // Detect manual timeline scrubbing (YouTube API lacks a native "seeking" event)
     setInterval(() => {
       if (isReceivingUpdate || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
       const currentTime = ytPlayer.getCurrentTime();
@@ -238,22 +238,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setStatus(`Connected to ${roomName}! Screens are synced.`, true);
-          connectBtn.style.display = "none";
-          disconnectBtn.style.display = "inline-block";
         } else if (status === 'CHANNEL_ERROR') {
           setStatus('Connection error. Check Supabase credentials.');
         }
       });
-  }
-
-  function disconnectRoom() {
-    if (activeChannel) {
-      supabase.removeChannel(activeChannel);
-      activeChannel = null;
-    }
-    setStatus("Disconnected. Supabase sync stopped.", false);
-    connectBtn.style.display = "inline-block";
-    disconnectBtn.style.display = "none";
   }
 
   function sendSyncCommand(type, time) {
@@ -270,22 +258,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const roomToJoin = partnerInput.value.trim();
     if (roomToJoin) {
       joinRoom(roomToJoin);
-    } else {
-      setStatus("Please enter or paste a Room ID first.");
     }
-  });
-
-  disconnectBtn.addEventListener("click", () => {
-    disconnectRoom();
   });
 
   copyIdBtn.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(myIdEl.textContent);
+      await navigator.clipboard.writeText(partnerInput.value.trim() || myIdEl.textContent);
       copyIdBtn.textContent = "Copied!";
       setTimeout(() => (copyIdBtn.textContent = "Copy"), 2000);
     } catch {
       copyIdBtn.textContent = "Copy";
     }
   });
+
+  // Auto-join the default generated room on load
+  joinRoom(defaultRoom);
 });
