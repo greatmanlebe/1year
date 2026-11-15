@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   
-  <!-- Only your ES Module script.js (Supabase is imported inside it) -->
   <script type="module" src="script.js"></script>
 </head>
 <body>
@@ -112,11 +111,12 @@
     </section>
 
     <!-- SECTION 4: SYNCHRONIZED MOVIE THEATER -->
+   <!-- SECTION 4: SYNCHRONIZED MOVIE THEATER -->
     <section class="editorial-section theater-section">
       <div class="section-header">
         <span class="section-num">04</span>
         <h2>Our Private Screening</h2>
-        <p class="section-desc">Share your Room ID or paste hers below so Play, Pause, and Scrubbing stay in sync.</p>
+        <p class="section-desc">Click Sync Screens to connect instantly without background quotas.</p>
       </div>
 
       <div class="video-frame" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
@@ -131,26 +131,26 @@
       </div>
 
       <div class="sync-panel">
-<div class="room-id-row">
-  <span class="label">Your Room ID</span>
-  <div class="id-pill">
-    <!-- Generates instantly with zero delay -->
-    <code id="my-id">vanelle-room-<script>document.write(Math.floor(1000 + Math.random() * 9000));</script></code>
-    <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
-  </div>
-</div>
+        <div class="room-id-row">
+          <span class="label">Your Room ID</span>
+          <div class="id-pill">
+            <code id="my-id">vanelle-room-<script>document.write(Math.floor(1000 + Math.random() * 9000));</script></code>
+            <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
+          </div>
+        </div>
+
         <div class="sync-controls">
-          <input type="text" id="partner-id-input" placeholder="Paste Vanelle's Room ID here..." />
+          <input type="text" id="partner-id-input" placeholder="Room ID..." />
           <button id="connect-btn" class="btn-primary" type="button">Sync Screens</button>
+          <button id="disconnect-btn" class="btn-outline" type="button" style="display: none;">Stop Sync</button>
         </div>
 
         <div class="status-bar">
           <span class="status-dot" id="status-dot"></span>
-          <p id="connection-status">Waiting for partner connection...</p>
+          <p id="connection-status">Ready. Click Sync Screens to start.</p>
         </div>
       </div>
     </section>
-  </main>
 
   <footer>
     <p>Made with love for Vanelle • Year One</p>

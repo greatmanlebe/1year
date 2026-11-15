@@ -148,11 +148,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let ytPlayer = null;
   let activeChannel = null;
   let isReceivingUpdate = false;
-  let lastKnownTime = 0;
   const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
 
-  // Keep partner input empty on load (no auto-connect)
-  if (partnerInput) partnerInput.value = "";
+  // Pre-fill input with our own generated ID so it's a 1-click sync, but DOES NOT auto-connect
+  const myRoomId = myIdEl ? myIdEl.textContent.trim() : "vanelle-room-1234";
+  if (partnerInput) partnerInput.value = myRoomId;
 
   function setStatus(text, isConnected = false) {
     if (!connStatusEl) return;
@@ -184,15 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     });
-
-    setInterval(() => {
-      if (isReceivingUpdate || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
-      const currentTime = ytPlayer.getCurrentTime();
-      if (Math.abs(currentTime - lastKnownTime) > 1.8) {
-        sendSyncCommand('seek', currentTime);
-      }
-      lastKnownTime = currentTime;
-    }, 600);
   };
 
   function joinRoom(roomName) {
@@ -203,7 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setStatus(`Joining room: ${roomName}...`);
-    console.log("Attempting Supabase connection to channel:", roomName);
 
     activeChannel = supabase.channel(roomName, {
       config: { broadcast: { self: false } }
@@ -217,9 +207,8 @@ document.addEventListener("DOMContentLoaded", () => {
         isReceivingUpdate = true;
 
         const currentTime = ytPlayer.getCurrentTime();
-        if (Math.abs(currentTime - data.time) > 0.8) {
+        if (Math.abs(currentTime - data.time) > 0.5) {
           ytPlayer.seekTo(data.time, true);
-          lastKnownTime = data.time;
         }
 
         if (data.type === 'play') {
@@ -228,22 +217,20 @@ document.addEventListener("DOMContentLoaded", () => {
           ytPlayer.pauseVideo();
         } else if (data.type === 'seek') {
           ytPlayer.seekTo(data.time, true);
-          lastKnownTime = data.time;
         }
 
+        // Fast, snappy reset window (400ms)
         setTimeout(() => {
           isReceivingUpdate = false;
-        }, 450);
+        }, 400);
       })
-      .subscribe((status, err) => {
-        console.log("Supabase subscription status:", status, err);
+      .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setStatus(`Connected to ${roomName}! Screens are synced.`, true);
           if (connectBtn) connectBtn.style.display = "none";
           if (disconnectBtn) disconnectBtn.style.display = "inline-block";
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setStatus('Connection error. Check Supabase project settings.');
-          console.error("Channel error details:", err);
+        } else if (status === 'CHANNEL_ERROR') {
+          setStatus('Connection error. Check Supabase credentials.');
         }
       });
   }
@@ -259,11 +246,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function sendSyncCommand(type, time) {
-    if (!isReceivingUpdate && activeChannel) {
+    if (!isReceivingUpdate && activeChannel && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
       activeChannel.send({
         type: 'broadcast',
         event: 'video-sync',
-        payload: { type, time, sender: clientId }
+        payload: { type, time: ytPlayer.getCurrentTime(), sender: clientId }
       });
     }
   }
