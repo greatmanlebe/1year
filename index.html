@@ -112,6 +112,7 @@
     </section>
 
     <!-- SECTION 4: SYNCHRONIZED MOVIE THEATER -->
+    <!-- SECTION 4: SYNCHRONIZED MOVIE THEATER -->
     <section class="editorial-section theater-section">
       <div class="section-header">
         <span class="section-num">04</span>
@@ -134,19 +135,20 @@
         <div class="room-id-row">
           <span class="label">Your Room ID</span>
           <div class="id-pill">
-            <code id="my-id">Generating ID....</code>
+            <code id="my-id">Generating ID...</code>
             <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
           </div>
         </div>
 
         <div class="sync-controls">
-          <input type="text" id="partner-id-input" placeholder="Paste Vanelle's Room ID here..." />
+          <input type="text" id="partner-id-input" placeholder="Paste partner's Room ID here..." />
           <button id="connect-btn" class="btn-primary" type="button">Sync Screens</button>
+          <button id="disconnect-btn" class="btn-outline" type="button" style="display: none;">Stop Sync</button>
         </div>
 
         <div class="status-bar">
           <span class="status-dot" id="status-dot"></span>
-          <p id="connection-status">Waiting for partner connection...</p>
+          <p id="connection-status">Disconnected. Enter a Room ID and click Sync Screens.</p>
         </div>
       </div>
     </section>
