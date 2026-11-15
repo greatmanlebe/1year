@@ -135,7 +135,7 @@
         <div class="room-id-row">
           <span class="label">Your Room ID</span>
           <div class="id-pill">
-            <code id="my-id">vanelle-room-<script>document.write(Math.floor(1000 + Math.random() * 9000));</script></code>
+            <code id="my-id">vanelle-room-0000</code>
             <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
           </div>
         </div>
@@ -157,6 +157,12 @@
   <footer>
     <p>Made with love for Vanelle • Year One</p>
   </footer>
-
+<script>
+    const randomCode = Math.floor(1000 + Math.random() * 9000);
+    const generatedRoomId = "vanelle-room-" + randomCode;
+    
+    document.getElementById("my-id").textContent = generatedRoomId;
+    document.getElementById("partner-id-input").value = "vanelle-room-";
+  </script>
 </body>
 </html>

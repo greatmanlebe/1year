@@ -272,10 +272,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (copyIdBtn) {
+if (copyIdBtn) {
     copyIdBtn.addEventListener("click", async () => {
       try {
-        await navigator.clipboard.writeText(myIdEl.textContent.trim());
+        const roomIdText = myIdEl ? myIdEl.textContent.trim() : "";
+        await navigator.clipboard.writeText(roomIdText);
         copyIdBtn.textContent = "Copied!";
         setTimeout(() => (copyIdBtn.textContent = "Copy"), 2000);
       } catch {
