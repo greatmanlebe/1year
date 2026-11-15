@@ -2,7 +2,7 @@ import { supabase } from './src/apr/supabase.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   /* ================= 1. JIGSAW PUZZLE ================= */
-  const puzzleImg = "v1.jpg";
+  const puzzleImg = "v15.jpg";
   const board = document.getElementById("puzzle-board");
   const statusEl = document.getElementById("puzzle-status");
 
