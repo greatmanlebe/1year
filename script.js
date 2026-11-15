@@ -148,13 +148,16 @@ document.addEventListener("DOMContentLoaded", () => {
   let ytPlayer = null;
   let activeChannel = null;
   let isReceivingUpdate = false;
-// Generate a clean room ID instantly on load
-  const randomCode = Math.floor(1000 + Math.random() * 9000);
-  const myRoomId = "vanelle-room-" + randomCode;
 
-  // Set it to your HTML display and pre-fill the input box cleanly
-  if (myIdEl) myIdEl.textContent = myRoomId;
-  if (partnerInput) partnerInput.value = myRoomId;
+  const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
+
+
+
+// 2. Injects it into the HTML so you can see and copy it
+if (myIdEl) myIdEl.textContent = myRoomId;
+
+// 3. Keeps the input box pre-filled with just the prefix so you can type Vanelle's 4 digits
+if (partnerInput) partnerInput.value = "vanelle-room-";
 
   function setStatus(text, isConnected = false) {
     if (!connStatusEl) return;

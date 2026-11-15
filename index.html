@@ -134,13 +134,13 @@
         <div class="room-id-row">
           <span class="label">Your Room ID</span>
           <div class="id-pill">
-            <code id="my-id">vanelle-room-<script>document.write(Math.floor(1000 + Math.random() * 9000));</script></code>
+            <code id="my-id">Generating...</code>
             <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
           </div>
         </div>
 
         <div class="sync-controls">
-<input type="text" id="partner-id-input" value="vanelle-room-" placeholder="Enter 4-digit code..." />
+          <input type="text" id="partner-id-input" value="vanelle-room-" placeholder="Enter 4-digit code..." />
           <button id="connect-btn" class="btn-primary" type="button">Sync Screens</button>
           <button id="disconnect-btn" class="btn-outline" type="button" style="display: none;">Stop Sync</button>
         </div>
@@ -155,6 +155,12 @@
   <footer>
     <p>Made with love for Vanelle • Year One</p>
   </footer>
+<script>
+    const randomCode = Math.floor(1000 + Math.random() * 9000);
+    const generatedRoomId = "vanelle-room-" + randomCode;
 
+    document.getElementById("my-id").textContent = generatedRoomId;
+    document.getElementById("partner-id-input").value = "vanelle-room-";
+  </script>
 </body>
 </html>
