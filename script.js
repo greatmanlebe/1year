@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedIdx = null;
 
   function renderPuzzle() {
+    if (!board) return;
     board.innerHTML = "";
     order.forEach((tilePos, index) => {
       const tile = document.createElement("div");
@@ -26,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
       board.appendChild(tile);
     });
 
-    if (order.every((val, i) => val === i)) {
+    if (order.every((val, i) => val === i) && statusEl) {
       statusEl.textContent = "Complete. Happy 1 Year, my love.";
     }
   }
@@ -54,9 +55,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let isListening = false;
 
   async function extinguishCandle() {
-    if (!flame.classList.contains("out")) {
+    if (flame && !flame.classList.contains("out")) {
       flame.classList.add("out");
-      wishMsg.textContent = "Wish made. Saved to our cloud memory ❤️";
+      if (wishMsg) wishMsg.textContent = "Wish made. Saved to our cloud memory ❤️";
       stopMic();
 
       try {
@@ -70,13 +71,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function relightCandle() {
-    flame.classList.remove("out");
-    wishMsg.textContent = "The candle is lit and waiting for your wish.";
+    if (flame) flame.classList.remove("out");
+    if (wishMsg) wishMsg.textContent = "The candle is lit and waiting for your wish.";
   }
 
-  cakeBtn.addEventListener("click", () => {
-    flame.classList.contains("out") ? relightCandle() : extinguishCandle();
-  });
+  if (cakeBtn) {
+    cakeBtn.addEventListener("click", () => {
+      flame && flame.classList.contains("out") ? relightCandle() : extinguishCandle();
+    });
+  }
 
   function stopMic() {
     isListening = false;
@@ -131,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         detectBlow();
       } catch (err) {
-        wishMsg.textContent = "Microphone unavailable. Tap the flame to blow it out.";
+        if (wishMsg) wishMsg.textContent = "Microphone unavailable. Tap the flame to blow it out.";
       }
     });
   }
@@ -148,24 +151,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let ytPlayer = null;
   let activeChannel = null;
   let isReceivingUpdate = false;
-
   const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
-
-
-
-// 2. Injects it into the HTML so you can see and copy it
-if (myIdEl) myIdEl.textContent = myRoomId;
-
-// 3. Keeps the input box pre-filled with just the prefix so you can type Vanelle's 4 digits
-if (partnerInput) partnerInput.value = "vanelle-room-";
 
   function setStatus(text, isConnected = false) {
     if (!connStatusEl) return;
     connStatusEl.textContent = text;
-    if (isConnected) {
-      statusDot.classList.add("connected");
-    } else {
-      statusDot.classList.remove("connected");
+    if (statusDot) {
+      if (isConnected) {
+        statusDot.classList.add("connected");
+      } else {
+        statusDot.classList.remove("connected");
+      }
     }
   }
 
@@ -224,7 +220,6 @@ if (partnerInput) partnerInput.value = "vanelle-room-";
           ytPlayer.seekTo(data.time, true);
         }
 
-        // Fast, snappy reset window (400ms)
         setTimeout(() => {
           isReceivingUpdate = false;
         }, 400);
@@ -262,11 +257,11 @@ if (partnerInput) partnerInput.value = "vanelle-room-";
 
   if (connectBtn) {
     connectBtn.addEventListener("click", () => {
-      const roomToJoin = partnerInput.value.trim();
-      if (roomToJoin) {
+      const roomToJoin = partnerInput ? partnerInput.value.trim() : "";
+      if (roomToJoin && roomToJoin !== "vanelle-room-") {
         joinRoom(roomToJoin);
       } else {
-        setStatus("Please enter or paste a Room ID first.");
+        setStatus("Please enter the 4-digit Room ID first.");
       }
     });
   }
@@ -280,7 +275,7 @@ if (partnerInput) partnerInput.value = "vanelle-room-";
   if (copyIdBtn) {
     copyIdBtn.addEventListener("click", async () => {
       try {
-        await navigator.clipboard.writeText(myIdEl.textContent.trim());
+        await navigator.clipboard.writeText(myIdEl ? myIdEl.textContent.trim() : "");
         copyIdBtn.textContent = "Copied!";
         setTimeout(() => (copyIdBtn.textContent = "Copy"), 2000);
       } catch {
