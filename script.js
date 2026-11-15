@@ -1,4 +1,4 @@
-import { supabase } from './src/api/supabase';
+import { supabase } from './src/api/supabase.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   /* ================= 1. JIGSAW PUZZLE ================= */
@@ -136,8 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ================= 3. SUPABASE REALTIME MOVIE THEATER ================= */
-  const video = document.getElementById("shared-video");
+  /* ================= 3. YOUTUBE & SUPABASE REALTIME SYNC ================= */
   const myIdEl = document.getElementById("my-id");
   const copyIdBtn = document.getElementById("copy-id-btn");
   const partnerInput = document.getElementById("partner-id-input");
@@ -145,14 +144,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const connStatusEl = document.getElementById("connection-status");
   const statusDot = document.getElementById("status-dot");
 
+  let ytPlayer = null;
   let activeChannel = null;
   let isReceivingUpdate = false;
+  let lastKnownTime = 0;
   const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
 
-  // Generate a friendly default room name they can share
+  // Generate instant room ID
   const defaultRoom = "vanelle-room-" + Math.floor(1000 + Math.random() * 9000);
   myIdEl.textContent = defaultRoom;
-  partnerInput.value = defaultRoom; // Pre-fill so it's easy to test
+  partnerInput.value = defaultRoom;
 
   function setStatus(text, isConnected = false) {
     connStatusEl.textContent = text;
@@ -163,6 +164,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Load YouTube IFrame API
+  const ytScript = document.createElement('script');
+  ytScript.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(ytScript);
+
+  window.onYouTubeIframeAPIReady = () => {
+    ytPlayer = new YT.Player('yt-player', {
+      events: {
+        onStateChange: (event) => {
+          if (isReceivingUpdate || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+
+          const currentTime = ytPlayer.getCurrentTime();
+          if (event.data === YT.PlayerState.PLAYING) {
+            sendSyncCommand('play', currentTime);
+          } else if (event.data === YT.PlayerState.PAUSED) {
+            sendSyncCommand('pause', currentTime);
+          }
+        }
+      }
+    });
+
+    // Detect manual timeline scrubbing (YouTube API lacks a native "seeking" event)
+    setInterval(() => {
+      if (isReceivingUpdate || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+      const currentTime = ytPlayer.getCurrentTime();
+      if (Math.abs(currentTime - lastKnownTime) > 1.8) {
+        sendSyncCommand('seek', currentTime);
+      }
+      lastKnownTime = currentTime;
+    }, 600);
+  };
+
   function joinRoom(roomName) {
     if (!roomName) return;
 
@@ -172,7 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setStatus(`Joining room: ${roomName}...`);
 
-    // Create a Supabase Realtime channel for this room
     activeChannel = supabase.channel(roomName, {
       config: { broadcast: { self: false } }
     });
@@ -180,27 +212,28 @@ document.addEventListener("DOMContentLoaded", () => {
     activeChannel
       .on('broadcast', { event: 'video-sync' }, (payload) => {
         const data = payload.payload;
-        if (!data || data.sender === clientId) return;
+        if (!data || data.sender === clientId || !ytPlayer || typeof ytPlayer.seekTo !== 'function') return;
 
         isReceivingUpdate = true;
 
-        if (Math.abs(video.currentTime - data.time) > 0.4) {
-          video.currentTime = data.time;
+        const currentTime = ytPlayer.getCurrentTime();
+        if (Math.abs(currentTime - data.time) > 0.8) {
+          ytPlayer.seekTo(data.time, true);
+          lastKnownTime = data.time;
         }
 
         if (data.type === 'play') {
-          video.play().catch(() => {
-            setStatus("Connected — tap video once to allow playback.", true);
-          });
+          ytPlayer.playVideo();
         } else if (data.type === 'pause') {
-          video.pause();
+          ytPlayer.pauseVideo();
         } else if (data.type === 'seek') {
-          video.currentTime = data.time;
+          ytPlayer.seekTo(data.time, true);
+          lastKnownTime = data.time;
         }
 
         setTimeout(() => {
           isReceivingUpdate = false;
-        }, 300);
+        }, 450);
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -221,12 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Video listeners
-  video.addEventListener("play", () => sendSyncCommand("play", video.currentTime));
-  video.addEventListener("pause", () => sendSyncCommand("pause", video.currentTime));
-  video.addEventListener("seeking", () => sendSyncCommand("seek", video.currentTime));
-
-  // Connect Button Click
   connectBtn.addEventListener("click", () => {
     const roomToJoin = partnerInput.value.trim();
     if (roomToJoin) {
@@ -234,7 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Copy Room ID
   copyIdBtn.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(partnerInput.value.trim() || myIdEl.textContent);
@@ -245,6 +271,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Auto-join the default generated room on load so it's instantly ready
+  // Auto-join the default generated room on load
   joinRoom(defaultRoom);
 });
