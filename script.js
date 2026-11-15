@@ -151,10 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastKnownTime = 0;
   const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
 
-  // Generate unique room ID for this user (form starts completely empty)
-  const defaultRoom = "vanelle-room-" + Math.floor(1000 + Math.random() * 9000);
-  myIdEl.textContent = defaultRoom;
-  partnerInput.value = ""; // Empty on load to avoid auto-connecting
+// Read the instantly generated Room ID from the HTML element
+  const defaultRoom = myIdEl.textContent.trim();
+  partnerInput.value = ""; // Keeps form empty on load
 
   function setStatus(text, isConnected = false) {
     connStatusEl.textContent = text;

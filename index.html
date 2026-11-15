@@ -135,7 +135,8 @@
         <div class="room-id-row">
           <span class="label">Your Room ID</span>
           <div class="id-pill">
-            <code id="my-id">Generating ID...</code>
+            <!-- Generates instantly on page load -->
+            <code id="my-id">vanelle-room-<script>document.write(Math.floor(1000 + Math.random() * 9000));</script></code>
             <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
           </div>
         </div>
