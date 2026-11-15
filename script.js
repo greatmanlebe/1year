@@ -148,11 +148,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let ytPlayer = null;
   let activeChannel = null;
   let isReceivingUpdate = false;
-  const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
+// Generate a clean room ID instantly on load
+  const randomCode = Math.floor(1000 + Math.random() * 9000);
+  const myRoomId = "vanelle-room-" + randomCode;
 
-  // Pre-fill input with our own generated ID so it's a 1-click sync, but DOES NOT auto-connect
-  const myRoomId = myIdEl ? myIdEl.textContent.trim() : "vanelle-room-1234";
-if (partnerInput) partnerInput.value = "vanelle-room-";
+  // Set it to your HTML display and pre-fill the input box cleanly
+  if (myIdEl) myIdEl.textContent = myRoomId;
+  if (partnerInput) partnerInput.value = myRoomId;
 
   function setStatus(text, isConnected = false) {
     if (!connStatusEl) return;
