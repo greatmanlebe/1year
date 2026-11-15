@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Pre-fill input with our own generated ID so it's a 1-click sync, but DOES NOT auto-connect
   const myRoomId = myIdEl ? myIdEl.textContent.trim() : "vanelle-room-1234";
-  if (partnerInput) partnerInput.value = myRoomId;
+if (partnerInput) partnerInput.value = "vanelle-room-";
 
   function setStatus(text, isConnected = false) {
     if (!connStatusEl) return;
