@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedIdx = null;
 
   function renderPuzzle() {
-    if (!board) return;
     board.innerHTML = "";
     order.forEach((tilePos, index) => {
       const tile = document.createElement("div");
@@ -27,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
       board.appendChild(tile);
     });
 
-    if (order.every((val, i) => val === i) && statusEl) {
+    if (order.every((val, i) => val === i)) {
       statusEl.textContent = "Complete. Happy 1 Year, my love.";
     }
   }
@@ -55,9 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let isListening = false;
 
   async function extinguishCandle() {
-    if (flame && !flame.classList.contains("out")) {
+    if (!flame.classList.contains("out")) {
       flame.classList.add("out");
-      if (wishMsg) wishMsg.textContent = "Wish made. Saved to our cloud memory ❤️";
+      wishMsg.textContent = "Wish made. Saved to our cloud memory ❤️";
       stopMic();
 
       try {
@@ -71,15 +70,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function relightCandle() {
-    if (flame) flame.classList.remove("out");
-    if (wishMsg) wishMsg.textContent = "The candle is lit and waiting for your wish.";
+    flame.classList.remove("out");
+    wishMsg.textContent = "The candle is lit and waiting for your wish.";
   }
 
-  if (cakeBtn) {
-    cakeBtn.addEventListener("click", () => {
-      flame && flame.classList.contains("out") ? relightCandle() : extinguishCandle();
-    });
-  }
+  cakeBtn.addEventListener("click", () => {
+    flame.classList.contains("out") ? relightCandle() : extinguishCandle();
+  });
 
   function stopMic() {
     isListening = false;
@@ -134,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         detectBlow();
       } catch (err) {
-        if (wishMsg) wishMsg.textContent = "Microphone unavailable. Tap the flame to blow it out.";
+        wishMsg.textContent = "Microphone unavailable. Tap the flame to blow it out.";
       }
     });
   }
@@ -153,15 +150,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let isReceivingUpdate = false;
   const clientId = 'user-' + Math.random().toString(36).substring(2, 8);
 
+  // Pre-fill input with our own generated ID so it's a 1-click sync, but DOES NOT auto-connect
+  const myRoomId = myIdEl ? myIdEl.textContent.trim() : "vanelle-room-1234";
+  if (partnerInput) partnerInput.value = myRoomId;
+
   function setStatus(text, isConnected = false) {
     if (!connStatusEl) return;
     connStatusEl.textContent = text;
-    if (statusDot) {
-      if (isConnected) {
-        statusDot.classList.add("connected");
-      } else {
-        statusDot.classList.remove("connected");
-      }
+    if (isConnected) {
+      statusDot.classList.add("connected");
+    } else {
+      statusDot.classList.remove("connected");
     }
   }
 
@@ -220,6 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ytPlayer.seekTo(data.time, true);
         }
 
+        // Fast, snappy reset window (400ms)
         setTimeout(() => {
           isReceivingUpdate = false;
         }, 400);
@@ -257,11 +257,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (connectBtn) {
     connectBtn.addEventListener("click", () => {
-      const roomToJoin = partnerInput ? partnerInput.value.trim() : "";
-      if (roomToJoin && roomToJoin !== "vanelle-room-") {
+      const roomToJoin = partnerInput.value.trim();
+      if (roomToJoin) {
         joinRoom(roomToJoin);
       } else {
-        setStatus("Please enter the 4-digit Room ID first.");
+        setStatus("Please enter or paste a Room ID first.");
       }
     });
   }
@@ -275,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (copyIdBtn) {
     copyIdBtn.addEventListener("click", async () => {
       try {
-        await navigator.clipboard.writeText(myIdEl ? myIdEl.textContent.trim() : "");
+        await navigator.clipboard.writeText(myIdEl.textContent.trim());
         copyIdBtn.textContent = "Copied!";
         setTimeout(() => (copyIdBtn.textContent = "Copy"), 2000);
       } catch {

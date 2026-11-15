@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   
+  <!-- Only your ES Module script.js (Supabase is imported inside it) -->
   <script type="module" src="script.js"></script>
 </head>
 <body>
@@ -134,13 +135,13 @@
         <div class="room-id-row">
           <span class="label">Your Room ID</span>
           <div class="id-pill">
-            <code id="my-id">Generating...</code>
+            <code id="my-id">vanelle-room-<script>document.write(Math.floor(1000 + Math.random() * 9000));</script></code>
             <button id="copy-id-btn" type="button" class="btn-small">Copy</button>
           </div>
         </div>
 
         <div class="sync-controls">
-          <input type="text" id="partner-id-input" value="vanelle-room-" placeholder="Enter 4-digit code..." />
+          <input type="text" id="partner-id-input" placeholder="Room ID..." />
           <button id="connect-btn" class="btn-primary" type="button">Sync Screens</button>
           <button id="disconnect-btn" class="btn-outline" type="button" style="display: none;">Stop Sync</button>
         </div>
@@ -155,12 +156,6 @@
   <footer>
     <p>Made with love for Vanelle • Year One</p>
   </footer>
-<script>
-    const randomCode = Math.floor(1000 + Math.random() * 9000);
-    const generatedRoomId = "vanelle-room-" + randomCode;
 
-    document.getElementById("my-id").textContent = generatedRoomId;
-    document.getElementById("partner-id-input").value = "vanelle-room-";
-  </script>
 </body>
 </html>
